@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: currencies
+
+  cache:
+    caffeine:
+      spec: expireAfterWrite=1h
+
+# CBR
+cbr:
+  base:
+    url: https://cbr.ru/scripts
+  daily: /XML_daily.asp
+  valFull: /XML_valFull.asp
+
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      cbrValuta:
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+      cbrValCurs:
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
