@@ -35,6 +35,6 @@ public class CurrencyRestController {
     public CurrencyConvertDTO convertCurrency(@RequestBody ConversionRequest conversionRequest) {
         var convertedAmount = currencyService.convertToCurrency(conversionRequest.fromCurrency(),
                 conversionRequest.toCurrency(), conversionRequest.amount());
-        return new CurrencyConvertDTO(conversionRequest.fromCurrency(), conversionRequest.fromCurrency(), convertedAmount);
+        return new CurrencyConvertDTO(conversionRequest.fromCurrency(), conversionRequest.toCurrency(), convertedAmount);
     }
 }
