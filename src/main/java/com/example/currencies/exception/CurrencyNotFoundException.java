@@ -8,7 +8,7 @@ public class CurrencyNotFoundException extends RuntimeException {
     private final String code;
 
     public CurrencyNotFoundException(String code) {
-        super("currency not found");
+        super("currency.not.found");
         this.code = code;
     }
 }
