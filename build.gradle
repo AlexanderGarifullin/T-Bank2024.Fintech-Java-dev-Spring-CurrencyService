@@ -39,6 +39,8 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
+	implementation 'org.slf4j:slf4j-api:2.0.0'
+	implementation 'ch.qos.logback:logback-classic:1.4.12'
 
 	// test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
