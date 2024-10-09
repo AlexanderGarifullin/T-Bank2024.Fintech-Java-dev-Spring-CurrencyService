@@ -1,7 +1,9 @@
 package com.example.currencies.services;
 
+import com.example.currencies.entity.Item;
 import com.example.currencies.entity.ValCurs;
 import com.example.currencies.entity.Valuta;
+import com.example.currencies.entity.Valute;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
@@ -38,6 +41,11 @@ public class CBRService {
                 .uri(getValutaUrl)
                 .retrieve()
                 .toEntity(Valuta.class);
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            response.getBody().getItems().add(getRub());
+        }
+
         logger.info("GetValuta respone = {}", response);
 
         return Optional.ofNullable(response.getBody());
@@ -55,6 +63,11 @@ public class CBRService {
                 .uri(getValCursUrl)
                 .retrieve()
                 .toEntity(ValCurs.class);
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            response.getBody().getValutes().add(getRubCurs());
+        }
+
         logger.info("getValCurs respone = {}", response);
         return Optional.ofNullable(response.getBody());
     }
@@ -66,5 +79,29 @@ public class CBRService {
 
     private String getFallbackExMsg(String method, Exception ex) {
         return String.format("Circuit breaker fallback for %s. Error: %s", method, ex.getMessage());
+    }
+
+    private Item getRub() {
+        return new Item(
+                "R01235",
+                "Российский рубль",
+                "Russian Ruble",
+                1,
+                "R01235",
+                643,
+                "RUB"
+        );
+    }
+
+    private Valute getRubCurs() {
+        return new Valute(
+                "R01235",
+                643,
+                "RUB",
+                1,
+                "Российский рубль",
+                BigDecimal.valueOf(1.0),
+                BigDecimal.valueOf(1.0)
+        );
     }
 }
