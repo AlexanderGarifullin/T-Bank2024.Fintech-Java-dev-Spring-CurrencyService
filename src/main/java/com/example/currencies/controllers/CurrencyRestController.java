@@ -4,7 +4,6 @@ import com.example.currencies.dto.CurrencyConvertDTO;
 import com.example.currencies.dto.CurrencyRateDTO;
 import com.example.currencies.request.ConversionRequest;
 import com.example.currencies.services.CurrencyService;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
