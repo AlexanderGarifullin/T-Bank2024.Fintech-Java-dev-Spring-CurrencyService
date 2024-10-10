@@ -13,11 +13,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.client.HttpClientErrorException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchNullPointerException;
+import static org.assertj.core.api.ThrowableAssert.catchThrowable;
 
 
 @ActiveProfiles("test")
@@ -79,4 +81,25 @@ class CBRServiceTest {
     }
 
 
+    @Test
+    void getValCurs_Failure() {
+        wireMockServer.stubFor(get(urlEqualTo("/XML_daily.asp"))
+                .willReturn(aResponse()
+                        .withStatus(404)));
+
+        Throwable exception = catchThrowable(() -> cbrService.getValCurs());
+        assertThat(exception).isInstanceOf(HttpClientErrorException.NotFound.class);
+        assertThat(exception.getMessage()).isEqualTo("404 Not Found: [no body]");
+    }
+
+    @Test
+    void getValuta_Failure() {
+        wireMockServer.stubFor(get(urlEqualTo("/XML_valFull.asp"))
+                .willReturn(aResponse()
+                        .withStatus(404)));
+
+        Throwable exception = catchThrowable(() -> cbrService.getValuta());
+        assertThat(exception).isInstanceOf(HttpClientErrorException.NotFound.class);
+        assertThat(exception.getMessage()).isEqualTo("404 Not Found: [no body]");
+    }
 }
