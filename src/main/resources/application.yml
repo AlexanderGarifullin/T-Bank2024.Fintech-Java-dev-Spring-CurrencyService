@@ -1,10 +1,5 @@
-spring:
-  application:
-    name: currencies
-
-  cache:
-    caffeine:
-      spec: expireAfterWrite=1h
+server:
+  port: 8081
 
 # CBR
 cbr:
@@ -13,6 +8,16 @@ cbr:
   daily: /XML_daily.asp
   valFull: /XML_valFull.asp
 
+spring:
+  application:
+    name: currencies
+
+  cache:
+    caffeine:
+      spec: expireAfterWrite=1h
+
+  profiles:
+    active: prod
 
 resilience4j:
   circuitbreaker:
