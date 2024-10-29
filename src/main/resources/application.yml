@@ -1,0 +1,36 @@
+server:
+  port: 8081
+
+# CBR
+cbr:
+  base:
+    url: https://cbr.ru/scripts
+  daily: /XML_daily.asp
+  valFull: /XML_valFull.asp
+
+spring:
+  application:
+    name: currencies
+
+  cache:
+    caffeine:
+      spec: expireAfterWrite=1h
+
+  profiles:
+    active: prod
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      cbrValuta:
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+      cbrValCurs:
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
