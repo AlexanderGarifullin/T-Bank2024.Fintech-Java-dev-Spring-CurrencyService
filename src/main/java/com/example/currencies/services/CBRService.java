@@ -1,13 +1,14 @@
 package com.example.currencies.services;
 
-import com.example.currencies.entity.Item;
-import com.example.currencies.entity.ValCurs;
-import com.example.currencies.entity.Valuta;
-import com.example.currencies.entity.Valute;
+import com.example.currencies.entity.cbr.Item;
+import com.example.currencies.entity.cbr.ValCurs;
+import com.example.currencies.entity.cbr.Valuta;
+import com.example.currencies.entity.cbr.Valute;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class CBRService {
     private String getValutaUrl;
 
     @Autowired
-    public CBRService(RestClient restClient) {
+    public CBRService(@Qualifier("restClientCBR") RestClient restClient) {
         this.restClient = restClient;
     }
 
