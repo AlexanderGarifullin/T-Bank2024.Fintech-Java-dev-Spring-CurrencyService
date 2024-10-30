@@ -9,11 +9,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class KudaGoService {
@@ -24,7 +26,6 @@ public class KudaGoService {
 
     private final RestClient restClient;
 
-
     @Value("${kudaGo.events}")
     private String getEventsUrl;
 
@@ -32,7 +33,6 @@ public class KudaGoService {
     public KudaGoService(@Qualifier("restClientKudaGo") RestClient restClient) {
         this.restClient = restClient;
     }
-
 
     public CompletableFuture<List<EventResponse>> fetchEventsFuture(LocalDate dateFrom, LocalDate dateTo) {
         return CompletableFuture.supplyAsync(() -> {
@@ -58,6 +58,29 @@ public class KudaGoService {
         return CompletableFuture.supplyAsync(() -> getEventsFromPage(dateFrom, dateTo, page));
     }
 
+    public Mono<List<EventResponse>> fetchEventsReactive(LocalDate dateFrom, LocalDate dateTo) {
+        List<EventResponse> allEventResponses = new ArrayList<>();
+        AtomicInteger page = new AtomicInteger(1);
+
+        logger.info(String.format("Take events from %s to %s", dateFrom.toString(), dateTo.toString()));
+
+        return Mono.fromCallable(() -> {
+            while (true) {
+                logger.info("Get data from page " + page);
+                EventsResponse eventsResponse = getEventsFromPage(dateFrom, dateTo, page.get());
+
+                if (eventsResponse == null || eventsResponse.getResults().isEmpty()) {
+                    break;
+                }
+
+                logger.info("Add data from page " + page);
+                allEventResponses.addAll(eventsResponse.getResults());
+                page.getAndIncrement();
+            }
+            return allEventResponses;
+        });
+    }
+
     private EventsResponse getEventsFromPage(LocalDate dateFrom, LocalDate dateTo, int page) {
         try {
             var response = restClient.get()
@@ -76,10 +99,11 @@ public class KudaGoService {
                 logger.info("Get nothing from page" + page);
                 return null;
             }
-            logger.info("Get nothing from page" + page);
+            logger.info("Get successfull from page" + page);
+            logger.info("Cnt elements = " + response.getBody().getResults().size());
             return response.getBody();
         } catch (Exception ex) {
-            logger.info("Get nothing from page" + page);
+            logger.info("(ex) Get nothing from page" + page);
             logger.error(ex.getMessage());
             return null;
         }

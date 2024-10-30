@@ -6,6 +6,7 @@ import com.example.currencies.exception.InvalidCurrencyCodeException;
 import com.example.currencies.exception.ServiceUnavailableException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -63,4 +64,9 @@ public class CurrencyService {
     public CompletableFuture<BigDecimal> convertBudgetToRublesFuture(String fromCurrency, BigDecimal amount) {
         return CompletableFuture.supplyAsync(() -> convertToCurrency(fromCurrency, "RUB", amount));
     }
+
+    public Mono<BigDecimal> convertBudgetToRublesReactive(String fromCurrency, BigDecimal amount) {
+        return Mono.fromCallable(() -> convertToCurrency(fromCurrency, "RUB", amount));
+    }
+
 }
