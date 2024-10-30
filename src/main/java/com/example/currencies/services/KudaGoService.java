@@ -18,6 +18,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Service for interacting with the KudaGo API to fetch event data.
+ * This service provides methods for retrieving paginated event responses
+ * from the KudaGo API either asynchronously or reactively, while managing
+ * request rate limiting through a semaphore.
+ */
 @Service
 public class KudaGoService {
     private static final Logger logger = LoggerFactory.getLogger(KudaGoService.class);
@@ -31,6 +37,12 @@ public class KudaGoService {
     @Value("${kudaGo.events}")
     private String getEventsUrl;
 
+    /**
+     * Constructs a new instance of {@code KudaGoService}.
+     *
+     * @param restClient the configured RestClient for accessing the KudaGo API
+     * @param rateLimiterSemaphore a semaphore to control concurrent access to the API
+     */
     @Autowired
     public KudaGoService(@Qualifier("restClientKudaGo") RestClient restClient,
                          @Qualifier("kudaGoRateLimiterSemaphore") Semaphore rateLimiterSemaphore) {
@@ -38,6 +50,14 @@ public class KudaGoService {
         this.rateLimiterSemaphore = rateLimiterSemaphore;
     }
 
+    /**
+     * Fetches all events within a given date range asynchronously, using pagination to handle
+     * multiple pages of results. This method applies rate limiting to control API request frequency.
+     *
+     * @param dateFrom the start date for fetching events
+     * @param dateTo the end date for fetching events
+     * @return a {@code CompletableFuture} containing a list of {@code EventResponse} objects
+     */
     public CompletableFuture<List<EventResponse>> fetchEventsFuture(LocalDate dateFrom, LocalDate dateTo) {
         return CompletableFuture.supplyAsync(() -> {
             List<EventResponse> allEventResponses = new ArrayList<>();
@@ -65,10 +85,26 @@ public class KudaGoService {
         });
     }
 
+    /**
+     * Retrieves events for a specified page as a {@code CompletableFuture}.
+     *
+     * @param dateFrom the start date for the query
+     * @param dateTo the end date for the query
+     * @param page the page number to retrieve
+     * @return a {@code CompletableFuture} containing an {@code EventsResponse}
+     */
     private CompletableFuture<EventsResponse> getEventsFromPageFuture(LocalDate dateFrom, LocalDate dateTo, int page) {
         return CompletableFuture.supplyAsync(() -> getEventsFromPage(dateFrom, dateTo, page));
     }
 
+    /**
+     * Fetches all events within a given date range reactively, using pagination to handle
+     * multiple pages of results. This method applies rate limiting to control API request frequency.
+     *
+     * @param dateFrom the start date for fetching events
+     * @param dateTo the end date for fetching events
+     * @return a {@code Mono} containing a list of {@code EventResponse} objects
+     */
     public Mono<List<EventResponse>> fetchEventsReactive(LocalDate dateFrom, LocalDate dateTo) {
         List<EventResponse> allEventResponses = new ArrayList<>();
         AtomicInteger page = new AtomicInteger(1);
@@ -100,6 +136,14 @@ public class KudaGoService {
         });
     }
 
+    /**
+     * Retrieves events for a specific page and date range from the KudaGo API.
+     *
+     * @param dateFrom the start date for the query
+     * @param dateTo the end date for the query
+     * @param page the page number to retrieve
+     * @return an {@code EventsResponse} containing the event data for the specified page
+     */
     private EventsResponse getEventsFromPage(LocalDate dateFrom, LocalDate dateTo, int page) {
         try {
             var response = restClient.get()
