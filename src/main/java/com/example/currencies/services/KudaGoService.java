@@ -1,6 +1,5 @@
 package com.example.currencies.services;
 
-import com.example.currencies.entity.cbr.ValCurs;
 import com.example.currencies.entity.kudago.EventResponse;
 import com.example.currencies.entity.kudago.EventsResponse;
 import org.slf4j.Logger;
