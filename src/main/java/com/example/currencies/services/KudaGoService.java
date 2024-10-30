@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -25,13 +26,16 @@ public class KudaGoService {
     private static final String Fields = "id,title,price,is_free,dates";
 
     private final RestClient restClient;
+    private final Semaphore rateLimiterSemaphore;
 
     @Value("${kudaGo.events}")
     private String getEventsUrl;
 
     @Autowired
-    public KudaGoService(@Qualifier("restClientKudaGo") RestClient restClient) {
+    public KudaGoService(@Qualifier("restClientKudaGo") RestClient restClient,
+                         @Qualifier("kudaGoRateLimiterSemaphore") Semaphore rateLimiterSemaphore) {
         this.restClient = restClient;
+        this.rateLimiterSemaphore = rateLimiterSemaphore;
     }
 
     public CompletableFuture<List<EventResponse>> fetchEventsFuture(LocalDate dateFrom, LocalDate dateTo) {
@@ -42,13 +46,20 @@ public class KudaGoService {
             while (true) {
                 logger.info("Get data from page " + page);
 
-                EventsResponse eventsResponse = getEventsFromPageFuture(dateFrom, dateTo, page).join();
-                if (eventsResponse == null || eventsResponse.getResults().isEmpty()) {
-                    break;
+                try {
+                    rateLimiterSemaphore.acquire();
+                    EventsResponse eventsResponse = getEventsFromPageFuture(dateFrom, dateTo, page).join();
+                    if (eventsResponse == null || eventsResponse.getResults().isEmpty()) {
+                        break;
+                    }
+                    allEventResponses.addAll(eventsResponse.getResults());
+                    page++;
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    logger.error("Request interrupted", e);
+                } finally {
+                    rateLimiterSemaphore.release();
                 }
-                logger.info("Add data from page " + page);
-                allEventResponses.addAll(eventsResponse.getResults());
-                page++;
             }
             return allEventResponses;
         });
@@ -67,15 +78,23 @@ public class KudaGoService {
         return Mono.fromCallable(() -> {
             while (true) {
                 logger.info("Get data from page " + page);
-                EventsResponse eventsResponse = getEventsFromPage(dateFrom, dateTo, page.get());
+                try {
+                    rateLimiterSemaphore.acquire();
+                    EventsResponse eventsResponse = getEventsFromPage(dateFrom, dateTo, page.get());
 
-                if (eventsResponse == null || eventsResponse.getResults().isEmpty()) {
-                    break;
+                    if (eventsResponse == null || eventsResponse.getResults().isEmpty()) {
+                        break;
+                    }
+
+                    logger.info("Add data from page " + page);
+                    allEventResponses.addAll(eventsResponse.getResults());
+                    page.getAndIncrement();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    logger.error("Request interrupted", e);
+                } finally {
+                    rateLimiterSemaphore.release();
                 }
-
-                logger.info("Add data from page " + page);
-                allEventResponses.addAll(eventsResponse.getResults());
-                page.getAndIncrement();
             }
             return allEventResponses;
         });
