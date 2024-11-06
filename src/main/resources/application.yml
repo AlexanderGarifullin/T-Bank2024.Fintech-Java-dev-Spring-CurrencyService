@@ -8,6 +8,13 @@ cbr:
   daily: /XML_daily.asp
   valFull: /XML_valFull.asp
 
+# Kuda Go
+kudaGo:
+  base:
+    url: https://kudago.com/public-api/v1.4
+  events: /events/
+  maxConcurrentRequests: 5
+
 spring:
   application:
     name: currencies

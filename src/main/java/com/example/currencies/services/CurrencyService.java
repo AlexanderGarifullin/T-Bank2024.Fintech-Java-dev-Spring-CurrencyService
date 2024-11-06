@@ -1,14 +1,16 @@
 package com.example.currencies.services;
 
-import com.example.currencies.entity.ValCurs;
+import com.example.currencies.entity.cbr.ValCurs;
 import com.example.currencies.exception.CurrencyNotFoundException;
 import com.example.currencies.exception.InvalidCurrencyCodeException;
 import com.example.currencies.exception.ServiceUnavailableException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class CurrencyService {
@@ -58,4 +60,13 @@ public class CurrencyService {
                 )
                 .getVunitRate();
     };
+
+    public CompletableFuture<BigDecimal> convertBudgetToRublesFuture(String fromCurrency, BigDecimal amount) {
+        return CompletableFuture.supplyAsync(() -> convertToCurrency(fromCurrency, "RUB", amount));
+    }
+
+    public Mono<BigDecimal> convertBudgetToRublesReactive(String fromCurrency, BigDecimal amount) {
+        return Mono.fromCallable(() -> convertToCurrency(fromCurrency, "RUB", amount));
+    }
+
 }
